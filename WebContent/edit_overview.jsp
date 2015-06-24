@@ -24,7 +24,7 @@ String y = request.getParameter("year");
 		Statement st = con.createStatement();
 		int x = st.executeUpdate("update user_details set f_name='"+f+"', l_name='"+l+"', email_id='"+em+"', place_of_stay='"+place_of_stay+"', relationship_status='"+relationship+"', gender='"+g+"', b_date='"+y+"-"+m+"-"+d+"' where email_id='"+session.getAttribute("email_id")+"'");
 		if (x > 0) {
-			response.sendRedirect("aboutMe.jsp");
+			response.sendRedirect("aboutMe.jsp?user_id="+session.getAttribute("user_id"));
 		}
 		else {
 			out.println("Error");

@@ -37,12 +37,12 @@
 			     out.println("only jpeg format image files supported");
 			     continue;
 			    }
-			    File uploadDir = new File("D:\\Program Files\\Sanjana\\P_Expo Client Side\\WebContent\\img\\Albums");
+			    File uploadDir = new File("/Users/dhruvchawla/Documents/workspace/JavaProject01/Project/WebContent/img/Albums");
 			    File file = File.createTempFile("img",".jpeg",uploadDir);
 			    item.write(file);
 			    String str=file.toString();
 			    int len = str.length();
-			    int index=str.lastIndexOf('\\');
+			    int index=str.lastIndexOf('/');
 			    String path =str.substring(index+1,len);
 			    
 	        	  	 Class.forName("com.mysql.jdbc.Driver");

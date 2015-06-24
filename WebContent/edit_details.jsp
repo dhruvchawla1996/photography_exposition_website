@@ -17,7 +17,7 @@
 		Statement st = con.createStatement();
 		int x = st.executeUpdate("update user_details set nickname='"+nickname+"', fav_quotes='"+fav_quotes+"' where email_id='"+session.getAttribute("email_id")+"'");
 		if (x > 0) {
-			response.sendRedirect("aboutMe.jsp");
+			response.sendRedirect("aboutMe.jsp?user_id="+session.getAttribute("user_id"));
 		}
 		else {
 			out.println("Error");

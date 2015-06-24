@@ -8,24 +8,20 @@
 </head>
 <body>
 <%
-	String occupation = request.getParameter("occupation");
-	String skills = request.getParameter("skills");
-	String employment = request.getParameter("employment");
-	
+	int from_id = Integer.parseInt(session.getAttribute("user_id").toString());
+	int to_id = Integer.parseInt(request.getParameter("friend_id"));
 	try {
 		Class.forName("com.mysql.jdbc.Driver");
 		Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/photo.expo","root","");
 		Statement st = con.createStatement();
-		int x = st.executeUpdate("update user_details set occupation='"+occupation+"', skills='"+skills+"', employment='"+employment+"' where email_id='"+session.getAttribute("email_id")+"'");
-		if (x > 0) {
-			response.sendRedirect("aboutMe.jsp?user_id="+session.getAttribute("user_id"));
-		}
-		else {
-			out.println("Error");
+		int x = st.executeUpdate("delete from friends where from_id="+from_id+" and to_id="+to_id);
+		x = st.executeUpdate("delete from friends where from_id="+to_id+" and to_id="+from_id);
+		if (x>0) {
+			response.sendRedirect("friends.jsp?user_id="+session.getAttribute("user_id"));
 		}
 	}
 	catch (Exception e) {
-		out.println("Error = "+e.getMessage());
+		out.println("Error="+e.getMessage());
 	}
 %>
 </body>

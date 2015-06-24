@@ -68,6 +68,12 @@
 
 		</style>
 		<script>
+		<%
+		response.setHeader("Cache-Control","no-cache"); //Forces caches to obtain a new copy of the page from the origin server
+		response.setHeader("Cache-Control","no-store"); //Directs caches not to store the page under any circumstance
+		response.setDateHeader("Expires", 0); //Causes the proxy cache to see the page as "stale"
+		response.setHeader("Pragma","no-cache");//HTTP 1.0 backward compatibility
+		%>
 		<%!String f_name, l_name, email_id, gender, day, month, year, place_of_stay, relationship, occupation, skills, college, major, period, employment, nickname, fav_quotes, tagline, introduction, pic_location; java.util.Date b_date; %>
 		<%
 			try {
@@ -94,6 +100,9 @@
 					nickname = rs.getString(16);
 					fav_quotes = rs.getString(17);
 					pic_location = rs.getString(18);
+					if(pic_location == null) {
+						pic_location = "admin.jpg";
+					}
 					Calendar cal = Calendar.getInstance();
 					cal.setTime(b_date);
 					month = Integer.toString(cal.get(Calendar.MONTH)+1);
@@ -282,10 +291,12 @@
 			<h1 id="header1"><a href="#">Photographic Exposition</a></h1>
 			<nav id="nav">
 				<ul>
-					<li><a href="index.html">Home</a></li>
+					<li><a href="#">Home</a></li>
 					<li><a href="left-sidebar.html"></a>Blog</li>
 					<li><a href="right-sidebar.html"></a>About Us</li>
 					<li><a href="no-sidebar.html">Contact Us</a></li>
+					<li><a href="#events.html"></a>Events</li>
+					<li><a href="userProfile.jsp?user_id=<%= session.getAttribute("user_id") %>">My Profile</a></li>
 					<li><a href="index.jsp" class="button" id="b1">Sign Out</a></li>
 				</ul>
 			</nav>
@@ -294,6 +305,35 @@
 	
 	<section id="banner"></section>	
 	
+	<%
+	if (!request.getParameter("user_id").equals(session.getAttribute("user_id").toString())) {
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/photo.expo","root","");
+			Statement st1 = con.createStatement();
+			Statement st2 = con.createStatement();
+			ResultSet rs1 = st1.executeQuery("select * from friends where from_id='"+session.getAttribute("user_id").toString()+"' and to_id='"+request.getParameter("user_id")+"'");
+			ResultSet rs2 = st2.executeQuery("select * from friend_requests where from_id='"+session.getAttribute("user_id").toString()+"' and to_id='"+request.getParameter("user_id")+"'");
+			if (rs1.next()) {
+				%> <button type="button" class="btn btn-info" style="position: relative; top: -50px; left: -100px; float: right;">Friends</button> <%
+			}
+			else if(rs2.next()) {
+				%> <button type="button" class="btn btn-info" style="position: relative; top: -50px; left: -100px; float: right;">Request Sent</button> <%
+			}
+			else {
+				%>
+				<form action="add_friend.jsp" method="post">
+				<input type="hidden" name="to_id" value="<%= request.getParameter("user_id") %>">
+				<button type="submit" class="btn btn-info" style="position: relative; top: -50px; left: -100px; float: right;">Add Friend</button>
+				</form>
+				<% 
+			}
+		}
+		catch (Exception e) {
+			out.println("Error= "+e.getMessage());
+		}
+	} 
+	%>
 		<div id="header" class="skel-layers-absolute" style="position: absolute; top: 350px;">
 			<div class="container">
 				<nav id="nav">
@@ -301,7 +341,7 @@
 						<li><a href="userProfile.jsp?user_id=<%= request.getParameter("user_id") %>"><%= f_name %>'s Dashboard</a></li>
 						<li><a href="aboutMe.jsp?user_id=<%= request.getParameter("user_id") %>" style="color: blue;">About Me</a></li>
 						<li><a href="gallery.jsp?user_id=<%= request.getParameter("user_id") %>">Gallery</a></li>
-						<li><a href="index.jsp?user_id=<%= request.getParameter("user_id") %>">Friends Feed</a></li>
+						<li><a href="friends.jsp?user_id=<%= request.getParameter("user_id") %>">Friends Feed</a></li>
 						<li><a href="fav.jsp?user_id=<%= request.getParameter("user_id") %>">Favorites</a></li>
 						<li><a href="journal.jsp?user_id=<%= request.getParameter("user_id") %>">Journal</a></li>
 					</ul>
@@ -438,15 +478,15 @@
 							<table>
 								<tr>
 									<th> First Name</th>
-									<td><input type="text" name="fname" value=<%= f_name %>></td>
+									<td><input type="text" name="fname" value="<%= f_name %>"></td>
 								</tr>
 								<tr>
 									<th> Last Name</th>
-									<td><input type="text" name="lname" value=<%= l_name %>></td>
+									<td><input type="text" name="lname" value="<%= l_name %>"></td>
 								</tr>
 								<tr>
 									<th> Email</th>
-									<td><input type="email" name="email" value=<%= email_id %>></td>
+									<td><input type="email" name="email" value="<%= email_id %>"></td>
 								</tr>
 								<tr>
 									<th> Gender</th>
@@ -550,12 +590,12 @@
 										<option value="12">December
 										</option>
 							</select>
-							<input name="year" id="su_9" class="year" type="text" value=<%= year %> size="4" maxlength="4" style="height: 30px; width: 80px; display: inline;" required/> e.g 1976
+							<input name="year" id="su_9" class="year" type="text" value="<%= year %>" size="4" maxlength="4" style="height: 30px; width: 80px; display: inline;" required/> e.g 1976
 							</td>
 								</tr>
 								<tr>
 									<th> Place of Stay</th>
-									<td><input type="text" name="place_of_stay" value=<%= place_of_stay %>></td>
+									<td><input type="text" name="place_of_stay" value="<%= place_of_stay %>"></td>
 								</tr>
 								<tr>
 									<th> Relationship-Status: </th>
@@ -589,15 +629,15 @@
 							<table>
 								<tr>
 									<th>Occupation</th>
-									<td><input type="text" name="occupation" value=<%= occupation %>></td>
+									<td><input type="text" name="occupation" value="<%= occupation %>"></td>
 								</tr>
 								<tr>
 									<th>Skills</th>
-									<td><input type="text" name="skills" value=<%= skills %>></td>
+									<td><input type="text" name="skills" value="<%= skills %>"></td>
 								</tr>
 								<tr>
 									<th>Employment</th>
-									<td><input type="text" name="employment" value=<%= employment %>></td>
+									<td><input type="text" name="employment" value="<%= employment %>"></td>
 								</tr>
 								<tr><td><input id="s2" type="submit" value="Submit"><td></tr>
 							</table>
@@ -611,15 +651,15 @@
 							<table>
 								<tr>
 									<th>College</th>
-									<td><input type="text" name="college" value=<%= college %>></td>
+									<td><input type="text" name="college" value="<%= college %>"></td>
 								</tr>
 								<tr>
 									<th>Major</th>
-									<td><input type="text" name="major" value=<%= major %>></td>
+									<td><input type="text" name="major" value="<%= major %>"></td>
 								</tr>
 								<tr>
 									<th>Period</th>
-									<td><input type="text" name="period" value=<%= period %>></td>
+									<td><input type="text" name="period" value="<%= period %>"></td>
 								</tr>
 								<tr><td><input id="s3" type="submit" value="Submit"><td></tr>
 							</table>
@@ -633,11 +673,11 @@
 							<table>
 								<tr>
 									<th>Tagline</th>
-									<td><input type="text" name="tagline" value=<%= tagline %>></td>
+									<td><input type="text" name="tagline" value="<%= tagline %>"></td>
 								</tr>
 								<tr>
 									<th>Introduction</th>
-									<td><input type="text" name="introduction" value=<%= introduction %>></td>
+									<td><input type="text" name="introduction" value="<%= introduction %>"></td>
 								</tr>
 								<tr><td><input id="s4" type="submit" value="Submit"><td></tr>
 							</table>
@@ -651,11 +691,11 @@
 							<table>
 								<tr>
 									<th>Nickname</th>
-									<td><input type="text" name="nickname" value=<%= nickname %>></td>
+									<td><input type="text" name="nickname" value="<%= nickname %>"></td>
 								</tr>
 								<tr>
 									<th>Favourite Quotes</th>
-									<td><input type="text" name="fav_quotes" value=<%= fav_quotes %>></td>
+									<td><input type="text" name="fav_quotes" value="<%= fav_quotes %>"></td>
 								</tr>
 								<tr><td><input id="s5" type="submit" value="Submit"><td></tr>
 							</table>

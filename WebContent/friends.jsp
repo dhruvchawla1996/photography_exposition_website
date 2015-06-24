@@ -59,7 +59,13 @@
 		</style>
 </head>
 <body>
-<%! String f_name, l_name; %>
+<%
+	response.setHeader("Cache-Control","no-cache"); //Forces caches to obtain a new copy of the page from the origin server
+	response.setHeader("Cache-Control","no-store"); //Directs caches not to store the page under any circumstance
+	response.setDateHeader("Expires", 0); //Causes the proxy cache to see the page as "stale"
+	response.setHeader("Pragma","no-cache");//HTTP 1.0 backward compatibility
+	%>
+<%! String f_name, l_name, profile_pic_location; %>
 	<%
     session=request.getSession(false);
     if(session.getAttribute("user_id")==null)
@@ -71,10 +77,14 @@
     	Class.forName("com.mysql.jdbc.Driver");
 		Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/photo.expo","root","");
 		Statement st = con.createStatement();
-		ResultSet rs = st.executeQuery("select f_name, l_name from user_details where user_id='"+request.getParameter("user_id")+"'");
+		ResultSet rs = st.executeQuery("select f_name, l_name, pic_location from user_details where user_id='"+request.getParameter("user_id")+"'");
 		if (rs.next()) {
 			f_name = rs.getString(1);
 			l_name = rs.getString(2);
+			profile_pic_location = rs.getString(3);
+			if(profile_pic_location == null) {
+				profile_pic_location = "admin.jpg";
+			}
 		}
 		rs.close();
 		con.close();
@@ -88,10 +98,10 @@
 			<h1 id="header1"><a href="#">Photographic Exposition</a></h1>
 			<nav id="nav">
 				<ul>
-					<li><a href="index.jsp">Home</a></li>
-					<li><a href="blog.jsp"></a>Blog</li>
-					<li><a href="about_us.jsp"></a>About Us</li>
-					<li><a href="#openModal1">Contact Us</a></li>
+					<li><a href="#">Home</a></li>
+					<li><a href="left-sidebar.html"></a>Blog</li>
+					<li><a href="#events.html"></a>Events</li>
+					<li><a href="userProfile.jsp?user_id=<%= session.getAttribute("user_id") %>">My Profile</a></li>
 					<li><a href="index.jsp" class="button" id="b1">Sign Out</a></li>
 				</ul>
 			</nav>
@@ -99,6 +109,35 @@
 	</header>
 	
 	<section id="banner"></section>	
+	<%
+	if (!request.getParameter("user_id").equals(session.getAttribute("user_id").toString())) {
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/photo.expo","root","");
+			Statement st1 = con.createStatement();
+			Statement st2 = con.createStatement();
+			ResultSet rs1 = st1.executeQuery("select * from friends where from_id='"+session.getAttribute("user_id").toString()+"' and to_id='"+request.getParameter("user_id")+"'");
+			ResultSet rs2 = st2.executeQuery("select * from friend_requests where from_id='"+session.getAttribute("user_id").toString()+"' and to_id='"+request.getParameter("user_id")+"'");
+			if (rs1.next()) {
+				%> <button type="button" class="btn btn-info" style="position: relative; top: -50px; left: -100px; float: right;">Friends</button> <%
+			}
+			else if(rs2.next()) {
+				%> <button type="button" class="btn btn-info" style="position: relative; top: -50px; left: -100px; float: right;">Request Sent</button> <%
+			}
+			else {
+				%>
+				<form action="add_friend.jsp" method="post">
+				<input type="hidden" name="to_id" value="<%= request.getParameter("user_id") %>">
+				<button type="submit" class="btn btn-info" style="position: relative; top: -50px; left: -100px; float: right;">Add Friend</button>
+				</form>
+				<% 
+			}
+		}
+		catch (Exception e) {
+			out.println("Error= "+e.getMessage());
+		}
+	} 
+	%>
 	
 		<div id="header" class="skel-layers-absolute" style="position: absolute; top: 350px;;">
 			<div class="container">
@@ -116,7 +155,7 @@
 		</div>
 		
 		<div class="container">
-			<img id="profilePicture" alt="Profile Picture" src="img/admin.jpg">
+			<img id="profilePicture" alt="Profile Picture" src="img/profile_pictures/<%= profile_pic_location %>">
 		</div>
 		
 		<div class="container">
@@ -136,7 +175,19 @@
 							String friend_f_name = rs2.getString(1);
 							String friend_l_name = rs2.getString(2);
 							%>
+							<div class="container">
+							<div style="float: left">
 							<a href="userProfile.jsp?user_id=<%= friend_id %>"><%= friend_f_name %> <%= friend_l_name %></a><br>
+							</div>
+							<% if(request.getParameter("user_id").equals(session.getAttribute("user_id").toString())) { %>
+							<div style="float: left">
+							<form action="remove_friend.jsp" method="post">
+							<button type="submit" class="btn btn-info btn-xs">Remove</button>
+							<input type="hidden" name="friend_id" value="<%= friend_id %>">
+							</form>
+							</div>
+							<% } %>
+							</div>
 							<%
 						}
 					}
@@ -147,7 +198,39 @@
 				%>
 			</div>
 			<div class="feed-cards-r">
+			<% if (request.getParameter("user_id").equals(session.getAttribute("user_id").toString())) { %>
 				<h3>Incoming Friend Requests</h3>
+				<%
+					try {
+						Class.forName("com.mysql.jdbc.Driver");
+						Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/photo.expo","root","");
+						Statement st = con.createStatement();
+						ResultSet rs = st.executeQuery("select from_id from friend_requests where to_id="+session.getAttribute("user_id"));
+						while (rs.next()) {
+							int friend_request_id = rs.getInt(1);
+							Statement st2 = con.createStatement();
+							ResultSet rs2 = st2.executeQuery("select f_name, l_name from user_details where user_id="+friend_request_id+"");
+							if (rs2.next()) {
+								String friend_request_f_name = rs2.getString(1);
+								String friend_request_l_name = rs2.getString(2);
+								%>
+							
+								<a href="userProfile.jsp?user_id=<%= friend_request_id %>"><%= friend_request_f_name %> <%= friend_request_l_name %></a>
+								<form action="confirm_friend_request.jsp" method="post">
+								<button type="submit" class="btn btn-primary btn-xs">Confirm</button>
+								<input type="hidden" name="from_id" value="<%= friend_request_id %>">
+								</form>
+								
+								<br>
+								<%
+							}
+						}
+					}
+					catch (Exception e) {
+						out.println("Error= "+e.getMessage());
+					}
+				%>
+			<% } %>
 			</div>
 		</div>
 		<jsp:include page="footer.jsp"></jsp:include>

@@ -44,22 +44,45 @@
 	
 	<body>
 	<%
+	response.setHeader("Cache-Control","no-cache"); //Forces caches to obtain a new copy of the page from the origin server
+	response.setHeader("Cache-Control","no-store"); //Directs caches not to store the page under any circumstance
+	response.setDateHeader("Expires", 0); //Causes the proxy cache to see the page as "stale"
+	response.setHeader("Pragma","no-cache");//HTTP 1.0 backward compatibility
+	%>
+	<%! String f_name, l_name, profile_pic_location; %>
+	<%
     session=request.getSession(false);
     if(session.getAttribute("user_id")==null)
     {
         response.sendRedirect("index.jsp");
     }
-
+    try {
+    	Class.forName("com.mysql.jdbc.Driver");
+		Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/photo.expo","root","");
+		Statement st = con.createStatement();
+		ResultSet rs = st.executeQuery("select f_name, l_name, pic_location from user_details where user_id='"+request.getParameter("user_id")+"'");
+		if (rs.next()) {
+			f_name = rs.getString(1);
+			l_name = rs.getString(2);
+			profile_pic_location = rs.getString(3);
+			if(profile_pic_location == null) {
+				profile_pic_location = "admin.jpg";
+			}
+		}
+    }
+    catch (Exception e) {
+    	out.println("Error= "+e.getMessage());
+    }
 %>
 	<header id="header" class="skel-layers-fixed">
 		<div class="container">
 			<h1 id="header1"><a href="#">Photographic Exposition</a></h1>
 			<nav id="nav">
 				<ul>
-					<li><a href="index.jsp">Home</a></li>
-					<li><a href="blog.jsp"></a>Blog</li>
-					<li><a href="about_us.jsp"></a>About Us</li>
-					<li><a href="#openModal1">Contact Us</a></li>
+					<li><a href="#">Home</a></li>
+					<li><a href="left-sidebar.html"></a>Blog</li>
+					<li><a href="#events.html"></a>Events</li>
+					<li><a href="userProfile.jsp?user_id=<%= session.getAttribute("user_id") %>">My Profile</a></li>
 					<li><a href="index.jsp" class="button" id="b1">Sign Out</a></li>
 				</ul>
 			</nav>
@@ -67,24 +90,53 @@
 	</header>
 	
 	<section id="banner"></section>	
+	<%
+	if (!request.getParameter("user_id").equals(session.getAttribute("user_id").toString())) {
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/photo.expo","root","");
+			Statement st1 = con.createStatement();
+			Statement st2 = con.createStatement();
+			ResultSet rs1 = st1.executeQuery("select * from friends where from_id='"+session.getAttribute("user_id").toString()+"' and to_id='"+request.getParameter("user_id")+"'");
+			ResultSet rs2 = st2.executeQuery("select * from friend_requests where from_id='"+session.getAttribute("user_id").toString()+"' and to_id='"+request.getParameter("user_id")+"'");
+			if (rs1.next()) {
+				%> <button type="button" class="btn btn-info" style="position: relative; top: -50px; left: -100px; float: right;">Friends</button> <%
+			}
+			else if(rs2.next()) {
+				%> <button type="button" class="btn btn-info" style="position: relative; top: -50px; left: -100px; float: right;">Request Sent</button> <%
+			}
+			else {
+				%>
+				<form action="add_friend.jsp" method="post">
+				<input type="hidden" name="to_id" value="<%= request.getParameter("user_id") %>">
+				<button type="submit" class="btn btn-info" style="position: relative; top: -50px; left: -100px; float: right;">Add Friend</button>
+				</form>
+				<% 
+			}
+		}
+		catch (Exception e) {
+			out.println("Error= "+e.getMessage());
+		}
+	} 
+	%>
 	
 		<div id="header" class="skel-layers-absolute" style="position: absolute; top: 350px;;">
 			<div class="container">
 				<nav id="nav">
 					<ul>
-						<li><a href="userProfile.jsp?<%= session.getAttribute("user_id") %>.<%= session.getAttribute("user") %>" style="color: blue;"><%= session.getAttribute("user") %>'s Dashboard</a></li>
-						<li><a href="aboutMe.jsp?<%= session.getAttribute("user_id") %>.<%= session.getAttribute("user") %>">About Me</a></li>
-						<li><a href="gallery.jsp?<%= session.getAttribute("user_id") %>.<%= session.getAttribute("user") %>">Gallery</a></li>
-						<li><a href="friends.jsp?<%= session.getAttribute("user_id") %>.<%= session.getAttribute("user") %>">Friends Feed</a></li>
-						<li><a href="fav.jsp?<%= session.getAttribute("user_id") %>.<%= session.getAttribute("user") %>">Favorites</a></li>
-						<li><a href="journal.jsp?<%= session.getAttribute("user_id") %>.<%= session.getAttribute("user") %>">Journal</a></li>
+						<li><a href="userProfile.jsp?user_id=<%= request.getParameter("user_id") %>"><%= f_name %>'s Dashboard</a></li>
+						<li><a href="aboutMe.jsp?user_id=<%= request.getParameter("user_id") %>">About Me</a></li>
+						<li><a href="gallery.jsp?user_id=<%= request.getParameter("user_id") %>">Gallery</a></li>
+						<li><a href="friends.jsp?user_id=<%= request.getParameter("user_id") %>">Friends Feed</a></li>
+						<li><a href="fav.jsp?user_id=<%= request.getParameter("user_id") %>">Favorites</a></li>
+						<li><a href="journal.jsp?user_id=<%= request.getParameter("user_id") %>" style="color: blue;">Journal</a></li>
 					</ul>
 				</nav>
 			</div>
 		</div>
 		
 		<div class="container">
-			<img id="profilePicture" alt="Profile Picture" src="img/admin.jpg">
+			<img id="profilePicture" alt="Profile Picture" src="img/profile_pictures/<%= profile_pic_location %>">
 		</div>
 		
 		<div class="container" style="border: solid 1px;padding: 10px; margin-top: -50px;">
@@ -129,8 +181,8 @@
 									 Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/photo.expo","root","");
 									 Statement st1 = con.createStatement();
 									 Statement st2 = con.createStatement();
-									 ResultSet rs1= st1.executeQuery("select * from user_journal where user_id='"+session.getAttribute("user_id")+"'");
-									 ResultSet rs2= st2.executeQuery("select * from user_journal where user_id='"+session.getAttribute("user_id")+"'");
+									 ResultSet rs1= st1.executeQuery("select * from user_journal where user_id='"+request.getParameter("user_id")+"'");
+									 ResultSet rs2= st2.executeQuery("select * from user_journal where user_id='"+request.getParameter("user_id")+"'");
 									 while(rs1.next())
 									 {
 							          %> 
@@ -166,7 +218,7 @@
 							          <p style="color: black;"><%=rs2.getString(4)%></p>
 						        </div>
 							<div>		
-								<button class="btn btn default" type="button" data-toggle="modal" data-target="#myjournal" style="margin: -20px -50px; position:relative; top:50%; text-transform: uppercase;">Edit <%= rs2.getString(3)%></button>
+								<button class="btn btn default" type="button" data-toggle="modal" data-target="#myjournal" style="margin: -20px -50px; position:relative; top:50%; text-transform: uppercase;">Edit - <%= rs2.getString(3)%></button>
 					    	</div>
 					    </div>
 				</div>
@@ -176,16 +228,21 @@
 						    <div class="modal-dialog">
 						      <!-- Modal content-->
 						      <div class="modal-content">
+						      <form action="edit_journal.jsp" method="post">
 							        <div class="modal-header">
 							          <button type="button" class="close" data-dismiss="modal">&times;</button>
-							          <h4 class="modal-title"><%= rs2.getString(3) %></h4>
+							          <input type="hidden" name="user_id" value="<%=request.getParameter("user_id")%>">
+							          <input type="hidden" name="t_id" value="<%=rs2.getInt(2)%>">
+							          <h4 class="modal-title"><input type="text" placeholder="<%= rs2.getString(3) %>" name="t_name"></h4>
 							        </div>
 							        <div class="modal-body">
-								          <textarea style="color: black;"><%=rs2.getString(4)%></textarea>
+								          <textarea style="color: black;" name="message"><%=rs2.getString(4)%></textarea>
 							        </div>
 							        <div class="modal-footer">
+							          <input type="submit" id="submit_journal" class="button" value="Edit">
 							          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 							        </div>   
+						      </form>
 						      </div>
 						    </div>
 					</div>
