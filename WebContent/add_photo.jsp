@@ -48,7 +48,7 @@
 	        	  	 Class.forName("com.mysql.jdbc.Driver");
 					 Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/photo.expo","root","");
 					 Statement st = con.createStatement();
-					 int x = st.executeUpdate("INSERT INTO user_photos(user_id,album_id,photo_location) VALUES('"+session.getAttribute("user_id")+"','"+session.getAttribute("alb_id12")+"','"+path+"')");
+					 int x = st.executeUpdate("INSERT INTO user_photos(user_id,album_id,photo_location, likes) VALUES('"+session.getAttribute("user_id")+"','"+session.getAttribute("alb_id12")+"','"+path+"', 0)");
 					 if(x>0)
 					 {
 						 response.sendRedirect("gallery.jsp?user_id="+session.getAttribute("user_id"));
