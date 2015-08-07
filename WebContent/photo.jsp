@@ -245,7 +245,7 @@
 										   <div class="modal-dialog">
 										      <!-- Modal content-->
 										      <div class="modal-content">
-										      	<form action="add_photo.jsp" onSubmit="" method="post" encType="multipart/form-data">
+										      	
 											        <div class="modal-header">
 											          <button type="button" class="close" data-dismiss="modal">&times;</button>
 											          <h4 class="modal-title">
@@ -279,11 +279,14 @@
 											          %>
 											        </div>
 											        <div class="modal-footer">
-											          <button type="button" style="float:left" class="btn btn-success">Like</button>
+											          <% out.println(rs1.getString(7)); %> Likes <br>
+											          <form method="post" action="like_photo.jsp?user_id=<%= request.getParameter("user_id") %>">
+											          <button type="submit" style="float:left" class="btn btn-success">Like</button>
+											          </form>
 											          <button type="button" style="float:left" class="btn btn-danger">Comment</button>
 											          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 											        </div>
-											    </form>    
+											
 										      </div>
 										    </div>
 									   </div>
