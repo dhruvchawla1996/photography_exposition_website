@@ -280,11 +280,11 @@
 											        </div>
 											        <div class="modal-footer">
 											          <% out.println(rs1.getString(7)); %> Likes <br>
-											          <form method="post" action="like_photo.jsp?user_id=<%= request.getParameter("user_id") %>">
+											          <form role="form" method="post" action="like_photo.jsp?user_id=<%= request.getParameter("user_id") %>">
 											          <button type="submit" style="float:left" class="btn btn-success">Like</button>
-											          </form>
 											          <button type="button" style="float:left" class="btn btn-danger">Comment</button>
 											          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+											          </form>
 											        </div>
 											
 										      </div>
