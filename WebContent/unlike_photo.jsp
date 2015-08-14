@@ -21,7 +21,7 @@
 		Class.forName("com.mysql.jdbc.Driver");
 		Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/photo.expo","root","");
 		Statement st1 = con.createStatement();
-		int x = st1.executeUpdate("insert into likes values("+photo_id+", "+session.getAttribute("user_id")+")");
+		int x = st1.executeUpdate("delete from likes where photo_id="+photo_id+" and user_id="+session.getAttribute("user_id"));
 		if (x>0) {
 			response.sendRedirect("gallery.jsp?user_id="+user_id);
 		}

@@ -279,12 +279,41 @@
 											          %>
 											        </div>
 											        <div class="modal-footer">
-											          <% out.println(rs1.getString(7)); %> Likes <br>
-											          <form role="form" method="post" action="like_photo.jsp?user_id=<%= request.getParameter("user_id") %>">
-											          <button type="submit" style="float:left" class="btn btn-success">Like</button>
-											          <button type="button" style="float:left" class="btn btn-danger">Comment</button>
-											          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+											        <%
+											        	//	Class.forName("com.mysql.jdbc.Driver");
+														//	Connection con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/photo.expo","root","");
+															Statement st2 = con.createStatement();
+															ResultSet rs2= st2.executeQuery("select * from likes where photo_id='"+rs1.getString(3)+"'");
+															int likes = 0;
+															boolean user_has_liked = false;
+															while (rs2.next()) {
+																likes++;
+																if (rs2.getInt(2) == Integer.parseInt(session.getAttribute("user_id").toString())) {
+																	user_has_liked = true;
+																}
+															}
+											        %>
+											          <% out.println(likes); %> Likes <br>
+											          <% 
+											          if (user_has_liked == false) { 
+											          %>
+											          <form role="form" method="post" action="like_photo.jsp?user_id=<%= request.getParameter("user_id") %>&photo_id=<%= rs1.getString(3) %>">
+											      	  	<button type="submit" style="float:left" class="btn btn-success">Like</button>
+											          	<button type="button" style="float:left" class="btn btn-danger">Comment</button>
+											          	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 											          </form>
+											          <%
+											          }
+											          else {
+											          %>
+											          <form role="form" method="post" action="unlike_photo.jsp?user_id=<%= request.getParameter("user_id") %>&photo_id=<%= rs1.getString(3) %>">
+											      	  	<button type="submit" style="float:left" class="btn btn-info">Unlike</button>
+											          	<button type="button" style="float:left" class="btn btn-danger">Comment</button>
+											          	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+											          </form>
+											          <% 
+											          }
+											          %>
 											        </div>
 											
 										      </div>
